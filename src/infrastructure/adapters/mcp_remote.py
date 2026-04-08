@@ -21,28 +21,24 @@ class MCPRemoteAdapter(MCPPort):
         timeout: Optional[int] = None
     ) -> ToolResult:
         headers = {"Authorization": f"Bearer {self.api_key}"}
+        logger.info(f"Invoking remote tool {operation} at {self.url}")
         
         try:
             async with sse_client(url=self.url, headers=headers) as (read, write):
                 async with ClientSession(read, write) as session:
-                    await session.initialize()
+                    await asyncio.wait_for(session.initialize(), timeout=10)
                     
-                    # В MCP SDK вызов инструмента идет через call_tool
-                    # Предполагаем, что operation соответствует имени инструмента
                     result = await asyncio.wait_for(
                         session.call_tool(operation, arguments=payload),
-                        timeout=timeout or 30
+                        timeout=timeout or 45
                     )
                     
-                    # Извлекаем данные из ответа (Content в MCP)
-                    data = {}
-                    if hasattr(result, 'content'):
-                        # Собираем текстовый контент в один словарь/строку
-                        data = {"content": [c.text for c in result.content if hasattr(c, 'text')]}
+                    data = {"content": [c.text for c in result.content if hasattr(c, 'text')]}
+                    logger.info(f"Remote tool {operation} success")
                     
                     return ToolResult(
                         ok=not result.isError,
-                        tool=self.url.split('.')[0].split('/')[-1], # Извлекаем имя из URL
+                        tool=self.url.split('/')[-2], 
                         operation=operation,
                         request_id=request_id,
                         data=data,
