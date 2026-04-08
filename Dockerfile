@@ -1,0 +1,32 @@
+# Используем образ с Python и Node.js
+FROM nikolaik/python-nodejs:python3.11-nodejs20-slim
+
+WORKDIR /app
+
+# Установка uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Копируем файлы зависимостей
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-cache --no-install-project
+
+# Копируем исходный код
+COPY src ./src
+COPY docs ./docs
+
+# Финальная синхронизация проекта
+RUN uv sync --frozen --no-cache
+
+# Создаем директорию для БД
+RUN mkdir -p /app/data
+
+# Настройка переменных окружения
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app"
+ENV DATABASE_URL="sqlite+aiosqlite:///app/data/stats.db"
+
+# Открываем порт
+EXPOSE 8000
+
+# Команда запуска
+CMD ["uvicorn", "src.interface.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
