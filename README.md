@@ -1,59 +1,59 @@
 # zrelay 🚀
 
-**zrelay** — это высокопроизводительный REST/OpenAPI шлюз для экосистемы инструментов [z.ai MCP](https://docs.z.ai/devpack/mcp/). Он объединяет локальные и удаленные MCP-инструменты в единый, защищенный HTTP API.
+**zrelay** is a high-performance REST/OpenAPI gateway for the [z.ai MCP](https://docs.z.ai/devpack/mcp/) tool ecosystem. It unifies local and remote MCP tools into a single, secure HTTP API.
 
-## ✨ Основные возможности
+## ✨ Key Features
 
-- **Единый API**: Доступ к `Vision`, `Search`, `Reader` и `Zread` через стандартные REST-запросы.
-- **Двухуровневая авторизация**: Скрывает ваш мастер-ключ `Z_AI_API_KEY`, предоставляя клиентам локальные ключи с возможностью управления доступом.
-- **Поддержка MCP протокола**:
-  - **Local**: Запуск `Vision` через `npx` (stdio транспорт).
-  - **Remote**: Подключение к `Search`, `Reader` и `Zread` через SSE (Server-Sent Events).
-- **Статистика и логирование**: Запись каждого вызова в SQLite (режим WAL) для анализа использования и производительности.
-- **Clean Architecture**: Кодовая база разделена на четкие слои (Domain, Application, Infrastructure, Interface) для легкой поддержки и расширения.
-- **Полная документация**: Автоматическая генерация Swagger UI и OpenAPI спецификации.
+- **Unified API**: Access `Vision`, `Search`, `Reader`, and `Zread` through standard REST requests.
+- **Two-Tier Authorization**: Hides your master `Z_AI_API_KEY` by providing clients with local keys, including access management.
+- **MCP Protocol Support**:
+  - **Local**: Run `Vision` tools via `npx` (stdio transport).
+  - **Remote**: Connect to `Search`, `Reader`, and `Zread` via SSE (Server-Sent Events).
+- **Statistics & Logging**: Records every call in SQLite (WAL mode) for usage and performance analysis.
+- **Clean Architecture**: The codebase is strictly divided into layers (Domain, Application, Infrastructure, Interface) for easy maintenance and extensibility.
+- **Full Documentation**: Automatic generation of Swagger UI and OpenAPI specifications.
 
-## 🛠 Технологический стек
+## 🛠 Tech Stack
 
-- **Язык**: Python 3.11
-- **Фреймворк**: FastAPI + Pydantic v2
+- **Language**: Python 3.11
+- **Framework**: FastAPI + Pydantic v2
 - **MCP SDK**: `mcp-python-sdk` (Anthropic)
-- **База данных**: SQLite + SQLModel (SQLAlchemy)
-- **Среда выполнения**: Docker (Node.js 22 + Python 3.11)
-- **Менеджер пакетов**: `uv`
+- **Database**: SQLite + SQLModel (SQLAlchemy)
+- **Runtime**: Docker (Node.js 22 + Python 3.11)
+- **Package Manager**: `uv`
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
-### 1. Подготовка окружения
-Создайте файл `.env` на основе примера:
+### 1. Environment Setup
+Create a `.env` file based on the example:
 ```bash
 cp .env.example .env
 ```
-Отредактируйте `.env` и укажите ваш мастер-ключ:
+Edit `.env` and provide your master key:
 ```env
-Z_AI_API_KEY=ваш_ключ_от_z_ai
+Z_AI_API_KEY=your_zai_api_key_here
 ```
 
-### 2. Запуск через Docker Compose
+### 2. Run with Docker Compose
 ```bash
 docker compose up --build -d
 ```
-Сервис будет доступен по адресу: `http://localhost:8000`
+The service will be available at: `http://localhost:8000`
 
-### 3. Проверка работоспособности
-- **Интерактивная документация**: [http://localhost:8000/docs](http://localhost:8000/docs)
+### 3. Verification
+- **Interactive Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Healthcheck**: `curl http://localhost:8000/health`
 
-## 🔑 Авторизация
+## 🔑 Authorization
 
-Для выполнения запросов используйте заголовок `X-API-Key`. Локальные ключи настраиваются через переменную окружения `LOCAL_API_KEYS_JSON` в формате:
+To perform requests, use the `X-API-Key` header. Local keys are configured via the `LOCAL_API_KEYS_JSON` environment variable in the following format:
 ```json
 [{"id": "agent-1", "key": "secret-key-123", "name": "Main Agent", "enabled": true}]
 ```
 
-## 📖 Примеры запросов
+## 📖 Request Examples
 
-### Поиск в Web (Search)
+### Web Search (Search)
 ```bash
 curl -X POST "http://localhost:8000/api/v1/search/web-search" \
      -H "X-API-Key: secret-key-123" \
@@ -61,7 +61,7 @@ curl -X POST "http://localhost:8000/api/v1/search/web-search" \
      -d '{"query": "FastAPI best practices", "max_results": 5}'
 ```
 
-### Анализ изображений (Vision)
+### Image Analysis (Vision)
 ```bash
 curl -X POST "http://localhost:8000/api/v1/vision/image-analysis" \
      -H "X-API-Key: secret-key-123" \
@@ -69,24 +69,24 @@ curl -X POST "http://localhost:8000/api/v1/vision/image-analysis" \
      -d '{"path": "https://example.com/screenshot.png", "prompt": "What is in this UI?"}'
 ```
 
-## 🏗 Архитектура
+## 🏗 Architecture
 
-Проект следует принципам **Clean Architecture**:
+The project follows **Clean Architecture** principles:
 
-- `src/domain`: Сущности (ApiKey, UsageLog) и бизнес-логика.
-- `src/application`: Сценарии использования (ZRelayService) и порты для инфраструктуры.
-- `src/infrastructure`: Реализации адаптеров (MCP Local/Remote) и репозитория (SQLite).
-- `src/interface`: FastAPI эндпоинты, валидация и Swagger.
+- `src/domain`: Entities (ApiKey, UsageLog) and business logic.
+- `src/application`: Use cases (ZRelayService) and ports for infrastructure.
+- `src/infrastructure`: Adapter implementations (MCP Local/Remote) and repository (SQLite).
+- `src/interface`: FastAPI endpoints, validation, and Swagger documentation.
 
-## 🧪 Тестирование
+## 🧪 Testing
 
-Проект покрыт тестами на **>80%**. Для запуска используйте `Justfile`:
+The project is covered by tests (**>80% coverage**). Use `Justfile` to run them:
 
 ```bash
-just test   # Запуск всех тестов с отчетом о покрытии
-just check  # Полная проверка (fmt + lint + test)
+just test   # Run all tests with coverage report
+just check  # Full check (fmt + lint + test)
 ```
 
-## 📝 Лицензия
+## 📝 License
 
 MIT
