@@ -13,9 +13,9 @@ lint:
 	uv run ruff check .
 	uv run pyright src
 
-# Запуск тестов
+# Запуск тестов с отчетом о покрытии
 test:
-	uv run pytest tests
+	uv run pytest --cov=src --cov-report=term-missing tests
 
 # Запуск приложения локально
 run:
