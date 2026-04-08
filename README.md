@@ -15,11 +15,11 @@
 
 ## 🛠 Tech Stack
 
-- **Language**: Python 3.11
+- **Language**: Python 3.13
 - **Framework**: FastAPI + Pydantic v2
 - **MCP SDK**: `mcp-python-sdk` (Anthropic)
 - **Database**: SQLite + SQLModel (SQLAlchemy)
-- **Runtime**: Docker (Node.js 22 + Python 3.11)
+- **Runtime**: Docker (Node.js 22 + Python 3.13)
 - **Package Manager**: `uv`
 
 ## 🚀 Quick Start

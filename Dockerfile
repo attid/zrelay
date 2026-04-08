@@ -1,5 +1,5 @@
-# Используем образ с Python и Node.js 22
-FROM nikolaik/python-nodejs:python3.11-nodejs22-slim
+# Используем образ с Python 3.13 и Node.js 22
+FROM nikolaik/python-nodejs:python3.13-nodejs22-slim
 
 WORKDIR /app
 
