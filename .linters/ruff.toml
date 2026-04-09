@@ -1,0 +1,28 @@
+# ruff.toml - Ruff configuration for zrelay
+
+target-version = "py313"
+line-length = 150
+
+[lint]
+select = ["E", "F", "I", "W", "S", "B", "C4"]
+
+# Игнорируем правила, неприменимые к FastHTML/FastAPI
+ignore = [
+    "S101",   # Assert used (ok for tests)
+    "S301",   # Pickle may be insecure (ok for internal use)
+    "S105",   # Hardcoded password - acceptable for dev/default config
+    "F403",   # Star import - normal for fasthtml
+    "F405",   # Star import undefined names - normal for fasthtml
+    "F811",   # Redefinition - normal for fasthtml routes
+    "B008",   # Depends in defaults - normal for FastAPI
+    "E402",   # Module level import not at top - intentional for lazy loading
+]
+
+[lint.isort]
+force-single-line = false
+combine-as-imports = true
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+"tests/*.py" = ["S"]
+".venv/**" = ["ALL"]

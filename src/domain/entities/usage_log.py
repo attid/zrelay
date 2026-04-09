@@ -1,7 +1,9 @@
-from datetime import datetime
-from typing import Optional, Any, Dict
-from sqlmodel import Field, SQLModel
 import uuid
+from datetime import datetime
+from typing import Optional
+
+from sqlmodel import Field, SQLModel
+
 
 class UsageLog(SQLModel, table=True):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)

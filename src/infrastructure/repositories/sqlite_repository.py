@@ -1,14 +1,17 @@
-from typing import Optional, List, Dict, Any
+import logging
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy import event
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, select
+
+from src.application.ports.repository_port import RepositoryPort
 from src.domain.entities.api_key import ApiKey
 from src.domain.entities.usage_log import UsageLog
-from src.application.ports.repository_port import RepositoryPort
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class SQLiteRepository(RepositoryPort):
     def __init__(self, database_url: str):
@@ -32,7 +35,7 @@ class SQLiteRepository(RepositoryPort):
 
     async def get_api_key(self, key: str) -> Optional[ApiKey]:
         async with self.async_session() as session:
-            statement = select(ApiKey).where(ApiKey.key == key, ApiKey.enabled == True)
+            statement = select(ApiKey).where(ApiKey.key == key, ApiKey.enabled)
             results = await session.execute(statement)
             return results.scalar_one_or_none()
 
@@ -58,12 +61,15 @@ class SQLiteRepository(RepositoryPort):
 
     async def get_recent_logs(self, limit: int = 50) -> List[UsageLog]:
         async with self.async_session() as session:
-            statement = select(UsageLog).order_by(UsageLog.timestamp.desc()).limit(limit)
+            statement = (
+                select(UsageLog).order_by(UsageLog.timestamp.desc()).limit(limit)
+            )
             results = await session.execute(statement)
             return list(results.scalars().all())
 
     async def create_api_key(self, name: str, key: Optional[str] = None) -> ApiKey:
         import secrets
+
         generated_key = key or f"zr-{secrets.token_urlsafe(24)}"
         new_key = ApiKey(key=generated_key, name=name)
         async with self.async_session() as session:
@@ -93,22 +99,23 @@ class SQLiteRepository(RepositoryPort):
 
     async def get_stats_summary(self) -> Dict[str, Any]:
         from sqlalchemy import func
+
         async with self.async_session() as session:
             # Общее кол-во
             count_stmt = select(func.count(UsageLog.id))
             total_calls = (await session.execute(count_stmt)).scalar() or 0
-            
+
             # Успешные
-            success_stmt = select(func.count(UsageLog.id)).where(UsageLog.success == True)
+            success_stmt = select(func.count(UsageLog.id)).where(UsageLog.success)
             success_calls = (await session.execute(success_stmt)).scalar() or 0
-            
+
             # Среднее время
             avg_time_stmt = select(func.avg(UsageLog.duration_ms))
             avg_duration = (await session.execute(avg_time_stmt)).scalar() or 0
-            
+
             return {
                 "total_calls": total_calls,
                 "success_calls": success_calls,
                 "error_calls": total_calls - success_calls,
-                "avg_duration_ms": round(float(avg_duration), 2) if avg_duration else 0
+                "avg_duration_ms": round(float(avg_duration), 2) if avg_duration else 0,
             }
