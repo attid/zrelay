@@ -24,11 +24,11 @@ def auth_before(req, session):
     if not session.get('auth'): 
         return Redirect('/admin/login')
 
-# Применяем проверку ко всем роутам админки
-app.before = auth_before
+# Применяем проверку ко всем роутам админки (список функций)
+app.before = [auth_before]
 
 def Layout(*args, active_tab="dashboard"):
-    return Main(
+    return Div(
         Nav(
             Div(
                 A("zrelay Admin", href="/admin", cls="btn btn-ghost text-xl"),
@@ -46,7 +46,7 @@ def Layout(*args, active_tab="dashboard"):
             ),
             cls="navbar bg-base-200 mb-8 rounded-box shadow-lg"
         ),
-        Container(*args, cls="mx-auto max-w-6xl"),
+        Div(*args, cls="container mx-auto max-w-6xl"),
         cls="bg-base-100 min-h-screen"
     )
 

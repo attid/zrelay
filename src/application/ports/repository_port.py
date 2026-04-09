@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from src.domain.entities.api_key import ApiKey
 from src.domain.entities.usage_log import UsageLog
 
@@ -17,6 +17,10 @@ class RepositoryPort(ABC):
 
     @abstractmethod
     async def get_all_api_keys(self) -> List[ApiKey]:
+        pass
+
+    @abstractmethod
+    async def add_api_keys(self, keys: List[ApiKey]) -> None:
         pass
 
     @abstractmethod

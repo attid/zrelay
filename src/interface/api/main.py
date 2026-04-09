@@ -47,6 +47,19 @@ app.include_router(reader.router, prefix="/api")
 app.include_router(zread.router, prefix="/api")
 app.include_router(vision.router, prefix="/api")
 
+# Admin Dashboard (FastHTML)
+from src.interface.admin.app import app as admin_app
+from starlette.middleware.sessions import SessionMiddleware
+
+# Добавляем атрибуты FastHTML
+app.canonical = True
+
+# Session middleware
+app.add_middleware(SessionMiddleware, secret_key=settings.ADMIN_PASSWORD)
+
+# Добавляем роуты админки в начало
+app.router.routes[:0] = admin_app.routes
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -55,4 +68,3 @@ async def health():
 async def ready():
     # Можно добавить проверку доступности БД
     return {"status": "ready"}
- "ready"}

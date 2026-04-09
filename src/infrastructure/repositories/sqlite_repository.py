@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -71,6 +71,16 @@ class SQLiteRepository(RepositoryPort):
             await session.commit()
             await session.refresh(new_key)
             return new_key
+
+    async def add_api_keys(self, keys: List[ApiKey]) -> None:
+        async with self.async_session() as session:
+            for k in keys:
+                # Check if exists
+                stmt = select(ApiKey).where(ApiKey.id == k.id)
+                existing = (await session.execute(stmt)).scalar_one_or_none()
+                if not existing:
+                    session.add(k)
+            await session.commit()
 
     async def delete_api_key(self, key_id: str) -> None:
         async with self.async_session() as session:
