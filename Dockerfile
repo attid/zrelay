@@ -3,6 +3,9 @@ FROM nikolaik/python-nodejs:python3.13-nodejs22-slim
 
 WORKDIR /app
 
+# Базовые утилиты для healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 # Установка uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -13,6 +16,7 @@ RUN uv sync --frozen --no-cache --no-install-project
 # Копируем исходный код
 COPY src ./src
 COPY docs ./docs
+COPY llms.txt ./llms.txt
 
 # Финальная синхронизация проекта
 RUN uv sync --frozen --no-cache

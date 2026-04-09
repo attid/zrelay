@@ -1,0 +1,196 @@
+# zrelay — REST/OpenAPI Gateway for z.ai MCP Tools
+
+> One API key, one base URL, all z.ai tools.
+
+## Base URL
+
+```
+https://your-zrelay-instance.com
+```
+
+## Authentication
+
+All requests require header:
+
+```
+X-API-Key: <your-api-key>
+```
+
+Error responses follow unified format:
+```json
+{"error": {"code": "auth_invalid", "message": "Invalid API Key"}}
+```
+
+## Endpoints
+
+### Search — Web Search
+
+```
+POST /api/v1/search/web-search
+```
+
+```json
+{
+  "query": "REST API best practices",
+  "language": "en",
+  "max_results": 10
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| query | string | yes | — | Search query |
+| language | string | no | "ru" | Search language |
+| max_results | int | no | 10 | Max number of results |
+
+### Reader — Read Web Page
+
+```
+POST /api/v1/reader/read-web
+```
+
+```json
+{
+  "url": "https://example.com/article"
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| url | string | yes | — | URL of the web page to read |
+
+### Zread — Repository Reader
+
+#### Search Documentation
+
+```
+POST /api/v1/zread/search-doc
+```
+
+```json
+{
+  "repo": "modelcontextprotocol/servers",
+  "query": "configuration options"
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| repo | string | yes | — | Repository in owner/repo format |
+| query | string | yes | — | Search query |
+
+#### Get Repository Structure
+
+```
+POST /api/v1/zread/repo-structure
+```
+
+```json
+{
+  "repo": "modelcontextprotocol/servers"
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| repo | string | yes | — | Repository in owner/repo format |
+
+#### Read File from Repository
+
+```
+POST /api/v1/zread/read-file
+```
+
+```json
+{
+  "repo": "modelcontextprotocol/servers",
+  "path": "README.md"
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| repo | string | yes | — | Repository in owner/repo format |
+| path | string | yes | — | Path to file in the repo |
+
+### Vision — Image & Video Analysis
+
+#### Image Analysis
+
+```
+POST /api/v1/vision/image-analysis
+```
+
+```json
+{
+  "path": "/path/to/image.png",
+  "prompt": "Describe what you see"
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| path | string | yes | — | Path to image or video |
+| prompt | string | no | null | Analysis prompt |
+
+#### UI Diff Check
+
+```
+POST /api/v1/vision/ui-diff-check
+```
+
+```json
+{
+  "before_path": "/path/to/before.png",
+  "after_path": "/path/to/after.png",
+  "prompt": "What changed?"
+}
+```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| before_path | string | yes | — | Path to before image |
+| after_path | string | yes | — | Path to after image |
+| prompt | string | no | null | Comparison prompt |
+
+## Response Format
+
+Success:
+```json
+{
+  "ok": true,
+  "tool": "search",
+  "operation": "webSearchPrime",
+  "request_id": "uuid",
+  "data": { ... },
+  "meta": {}
+}
+```
+
+Error:
+```json
+{
+  "ok": false,
+  "tool": "search",
+  "operation": "webSearchPrime",
+  "request_id": "uuid",
+  "error": {"code": "tool_error", "message": "..."},
+  "error_detail": {"error": {"code": "tool_error", "message": "...", "details": null}},
+  "meta": {}
+}
+```
+
+## Admin Dashboard
+
+Browser UI at `/admin` for managing API keys and viewing usage statistics.
+
+## Health Check
+
+```
+GET /health → {"status": "ok"}
+GET /ready  → {"status": "ready"}
+```
+
+## OpenAPI Docs
+
+Swagger UI available at `/docs`.

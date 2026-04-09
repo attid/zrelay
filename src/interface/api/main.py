@@ -1,7 +1,9 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse, RedirectResponse
 
 from src.infrastructure.config import settings
 from src.interface.admin.app import app as admin_app
@@ -50,8 +52,18 @@ app.canonical = True
 # Session middleware
 app.add_middleware(SessionMiddleware, secret_key=settings.ADMIN_PASSWORD)
 
-# Добавляем роуты админки в начало
-app.router.routes[:0] = admin_app.routes
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/llms.txt", status_code=307)
+
+
+@app.get("/llms.txt", response_class=PlainTextResponse)
+async def llms_txt():
+    llms_path = Path(__file__).resolve().parents[3] / "llms.txt"
+    if not llms_path.exists():
+        return PlainTextResponse("llms.txt not found", status_code=404)
+    return PlainTextResponse(llms_path.read_text(encoding="utf-8"))
 
 
 @app.get("/health")
@@ -63,3 +75,7 @@ async def health():
 async def ready():
     # Можно добавить проверку доступности БД
     return {"status": "ready"}
+
+
+# Добавляем роуты админки в конец, чтобы они не перехватывали /llms.txt и системные endpoints
+app.router.routes.extend(admin_app.routes)
