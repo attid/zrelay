@@ -28,5 +28,13 @@ class RepositoryPort(ABC):
         pass
 
     @abstractmethod
+    async def create_api_key(self, name: str, key: Optional[str] = None) -> ApiKey:
+        pass
+
+    @abstractmethod
+    async def delete_api_key(self, key_id: str) -> None:
+        pass
+
+    @abstractmethod
     async def get_stats_summary(self) -> Dict[str, Any]:
         pass

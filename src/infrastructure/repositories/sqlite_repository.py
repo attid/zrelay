@@ -62,6 +62,25 @@ class SQLiteRepository(RepositoryPort):
             results = await session.execute(statement)
             return list(results.scalars().all())
 
+    async def create_api_key(self, name: str, key: Optional[str] = None) -> ApiKey:
+        import secrets
+        generated_key = key or f"zr-{secrets.token_urlsafe(24)}"
+        new_key = ApiKey(key=generated_key, name=name)
+        async with self.async_session() as session:
+            session.add(new_key)
+            await session.commit()
+            await session.refresh(new_key)
+            return new_key
+
+    async def delete_api_key(self, key_id: str) -> None:
+        async with self.async_session() as session:
+            statement = select(ApiKey).where(ApiKey.id == key_id)
+            result = await session.execute(statement)
+            api_key = result.scalar_one_or_none()
+            if api_key:
+                await session.delete(api_key)
+                await session.commit()
+
     async def get_stats_summary(self) -> Dict[str, Any]:
         from sqlalchemy import func
         async with self.async_session() as session:

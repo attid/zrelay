@@ -109,31 +109,72 @@ async def keys():
     repo = get_repository()
     all_keys = await repo.get_all_api_keys()
     
-    rows = [
-        Tr(
-            Td(k.name),
-            Td(Code(k.key[:10] + "...")),
-            Td(
-                Input(type="checkbox", cls="toggle toggle-success", 
-                      checked=k.enabled,
-                      hx_post=f"/admin/keys/toggle/{k.id}",
-                      hx_swap="none")
-            ),
-            Td(k.created_at.strftime("%Y-%m-%d"))
-        ) for k in all_keys
-    ]
+    # Форма создания
+    add_form = Form(
+        Group(
+            Input(name="name", placeholder="Key Name (e.g. My Bot)", cls="input input-bordered"),
+            Button("Generate New Key", cls="btn btn-primary"),
+        ),
+        hx_post="/admin/keys/create",
+        hx_target="#keys-list",
+        cls="mb-8"
+    )
+    
+    rows = [render_key_row(k) for k in all_keys]
     
     return Layout(
         H1("API Keys", cls="text-3xl font-bold mb-6"),
+        add_form,
         Div(
             Table(
-                Thead(Tr(Th("Name"), Th("Key Snippet"), Th("Enabled"), Th("Created"))),
-                Tbody(*rows),
+                Thead(Tr(Th("Name"), Th("API Key"), Th("Enabled"), Th("Created"), Th("Actions"))),
+                Tbody(*rows, id="keys-list"),
                 cls="table table-md w-full"
             ),
             cls="overflow-x-auto shadow-xl rounded-box"
         )
     )
+
+def render_key_row(k):
+    return Tr(
+        Td(k.name, cls="font-semibold"),
+        Td(
+            Div(
+                Code(k.key, cls="text-xs"),
+                Button("📋", cls="btn btn-ghost btn-xs", onclick=f"navigator.clipboard.writeText('{k.key}')"),
+                cls="flex items-center gap-2"
+            )
+        ),
+        Td(
+            Input(type="checkbox", cls="toggle toggle-success", 
+                  checked=k.enabled,
+                  hx_post=f"/admin/keys/toggle/{k.id}",
+                  hx_swap="none")
+        ),
+        Td(k.created_at.strftime("%Y-%m-%d")),
+        Td(
+            Button("Delete", 
+                   cls="btn btn-error btn-outline btn-xs",
+                   hx_delete=f"/admin/keys/delete/{k.id}",
+                   hx_confirm="Are you sure?",
+                   hx_target="closest tr",
+                   hx_swap="outerHTML")
+        ),
+        id=f"key-{k.id}"
+    )
+
+@rt("/admin/keys/create")
+async def post(name: str):
+    if not name: return ""
+    repo = get_repository()
+    new_key = await repo.create_api_key(name)
+    return render_key_row(new_key)
+
+@rt("/admin/keys/delete/{key_id}")
+async def delete(key_id: str):
+    repo = get_repository()
+    await repo.delete_api_key(key_id)
+    return ""
 
 @rt("/admin/keys/toggle/{key_id}")
 async def post(key_id: str, request):
