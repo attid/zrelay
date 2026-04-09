@@ -2,7 +2,6 @@ from fasthtml.common import *
 from src.interface.api.auth import get_repository
 from src.infrastructure.config import settings
 import asyncio
-import base64
 
 # Настройка стилей
 hdrs = (
@@ -10,24 +9,25 @@ hdrs = (
     Script(src="https://cdn.tailwindcss.com"),
 )
 
-def auth_before(req):
-    auth = req.headers.get('Authorization')
-    if not auth: return Response(status=401, headers={'WWW-Authenticate': 'Basic realm="zrelay admin"'})
+# Инициализируем приложение с поддержкой сессий
+app, rt = fast_app(
+    hdrs=hdrs, 
+    cls="p-4",
+    secret_key=settings.ADMIN_PASSWORD # Используем пароль как ключ для подписи сессий
+)
+
+def auth_before(req, session):
+    # Разрешаем доступ к странице логина без авторизации
+    if req.url.path in ['/admin/login', '/admin/logout']: return
     
-    try:
-        scheme, data = auth.split()
-        if scheme.lower() != 'basic': return Response(status=401)
-        decoded = base64.b64decode(data).decode('utf-8')
-        username, password = decoded.split(':')
-        if username == settings.ADMIN_USERNAME and password == settings.ADMIN_PASSWORD:
-            return
-    except Exception:
-        pass
-    return Response(status=401, headers={'WWW-Authenticate': 'Basic realm="zrelay admin"'})
+    # Проверяем наличие флага в сессии
+    if not session.get('auth'): 
+        return Redirect('/admin/login')
 
-app, rt = fast_app(hdrs=hdrs, cls="p-4", before=auth_before)
+# Применяем проверку ко всем роутам админки
+app.before = auth_before
 
-def Layout(*args):
+def Layout(*args, active_tab="dashboard"):
     return Main(
         Nav(
             Div(
@@ -36,9 +36,10 @@ def Layout(*args):
             ),
             Div(
                 Ul(
-                    Li(A("Dashboard", href="/admin")),
-                    Li(A("Logs", href="/admin/logs")),
-                    Li(A("Keys", href="/admin/keys")),
+                    Li(A("Dashboard", href="/admin", cls="active" if active_tab=="dashboard" else "")),
+                    Li(A("Logs", href="/admin/logs", cls="active" if active_tab=="logs" else "")),
+                    Li(A("Keys", href="/admin/keys", cls="active" if active_tab=="keys" else "")),
+                    Li(A("Logout", href="/admin/logout", cls="text-error")),
                     cls="menu menu-horizontal px-1"
                 ),
                 cls="flex-none"
@@ -48,6 +49,45 @@ def Layout(*args):
         Container(*args, cls="mx-auto max-w-6xl"),
         cls="bg-base-100 min-h-screen"
     )
+
+@rt("/admin/login")
+def get():
+    return Title("Login - zrelay"), Main(
+        Div(
+            Div(
+                H1("zrelay Login", cls="text-2xl font-bold text-center mb-6"),
+                Form(
+                    Div(
+                        Label("Username", cls="label"),
+                        Input(name="username", value="admin", cls="input input-bordered", readonly=True),
+                        cls="form-control"
+                    ),
+                    Div(
+                        Label("Password", cls="label"),
+                        Input(name="password", type="password", placeholder="Enter admin password", cls="input input-bordered", autofocus=True),
+                        cls="form-control mt-4"
+                    ),
+                    Button("Sign In", cls="btn btn-primary w-full mt-8"),
+                    action="/admin/login", method="post"
+                ),
+                cls="card-body"
+            ),
+            cls="card w-96 bg-base-200 shadow-xl"
+        ),
+        cls="flex items-center justify-center min-h-screen bg-base-100"
+    )
+
+@rt("/admin/login")
+async def post(username: str, password: str, session):
+    if username == settings.ADMIN_USERNAME and password == settings.ADMIN_PASSWORD:
+        session['auth'] = True
+        return Redirect('/admin')
+    return Redirect('/admin/login?error=1')
+
+@rt("/admin/logout")
+def get(session):
+    session.pop('auth', None)
+    return Redirect('/admin/login')
 
 @rt("/admin")
 async def index():
@@ -73,7 +113,8 @@ async def index():
                 cls="stat"
             ),
             cls="stats shadow w-full"
-        )
+        ),
+        active_tab="dashboard"
     )
 
 @rt("/admin/logs")
@@ -101,7 +142,8 @@ async def logs():
                 cls="table table-zebra w-full"
             ),
             cls="overflow-x-auto shadow-xl rounded-box"
-        )
+        ),
+        active_tab="logs"
     )
 
 @rt("/admin/keys")
@@ -109,7 +151,6 @@ async def keys():
     repo = get_repository()
     all_keys = await repo.get_all_api_keys()
     
-    # Форма создания
     add_form = Form(
         Group(
             Input(name="name", placeholder="Key Name (e.g. My Bot)", cls="input input-bordered"),
@@ -132,7 +173,8 @@ async def keys():
                 cls="table table-md w-full"
             ),
             cls="overflow-x-auto shadow-xl rounded-box"
-        )
+        ),
+        active_tab="keys"
     )
 
 def render_key_row(k):
@@ -178,11 +220,7 @@ async def delete(key_id: str):
 
 @rt("/admin/keys/toggle/{key_id}")
 async def post(key_id: str, request):
-    # FastHTML автоматически парсит body. Если чекбокс в форме, он придет. 
-    # Но HTMX при нажатии на toggle без формы может не прислать значение.
-    # Для простоты в MVP просто инвертируем текущее состояние.
     repo = get_repository()
-    # Получаем текущее состояние (можно было бы передать в hx-vals, но так надежнее)
     keys = await repo.get_all_api_keys()
     current = next((k for k in keys if k.id == key_id), None)
     if current:
