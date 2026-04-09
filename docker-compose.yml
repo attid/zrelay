@@ -2,12 +2,18 @@ services:
   zrelay:
     image: ghcr.io/attid/zrelay:latest
     ports:
-      - "${PORT:-8000}:8000"
-    env_file:
-      - .env
+      - "${PORT:-8000}:8000"  # External port mapping
+    environment:
+      - Z_AI_API_KEY=${Z_AI_API_KEY:?}
+      # - DATABASE_URL=sqlite+aiosqlite:///data/stats.db  # SQLite DB path
+      # - ADMIN_PASSWORD=${ADMIN_PASSWORD:?}  # Required! Auto-generated if not set
+      # - LOG_LEVEL=${LOG_LEVEL:-INFO}  # Logging level
+      # - SEARCH_MCP_URL=https://api.z.ai/api/mcp/web_search_prime/sse
+      # - READER_MCP_URL=https://api.z.ai/api/mcp/web_reader/sse
+      # - ZREAD_MCP_URL=https://api.z.ai/api/mcp/zread/sse
     volumes:
-      - ./data:/app/data
+      - zrelay_data:/app/data
     restart: always
 
 volumes:
-  data:
+  zrelay_data:
