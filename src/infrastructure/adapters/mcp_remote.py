@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import Any, Dict, Optional
 
+import httpx
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 
@@ -27,7 +28,12 @@ class MCPRemoteAdapter(MCPPort):
         logger.info(f"Invoking remote tool {operation} at {self.url}")
 
         try:
-            async with sse_client(url=self.url, headers=headers) as (read, write):
+            # SSE connections need long timeouts — default httpx timeout is too short
+            async with sse_client(
+                url=self.url,
+                headers=headers,
+                timeout=httpx.Timeout(connect=10.0, read=120.0, write=10.0, pool=10.0),
+            ) as (read, write):
                 async with ClientSession(read, write) as session:
                     await asyncio.wait_for(session.initialize(), timeout=10)
 
