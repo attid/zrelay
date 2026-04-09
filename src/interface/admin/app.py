@@ -223,6 +223,7 @@ async def keys():
         ),
         hx_post="/admin/keys/create",
         hx_target="#keys-list",
+        hx_swap="beforeend",
         cls="mb-8",
     )
 
@@ -251,7 +252,35 @@ async def keys():
     )
 
 
-def render_key_row(k):
+def render_key_row(k, confirm_delete: bool = False):
+    actions = (
+        Div(
+            Button(
+                "Confirm",
+                cls="btn btn-error btn-xs",
+                hx_delete=f"/admin/keys/delete/{k.id}",
+                hx_target="closest tr",
+                hx_swap="outerHTML",
+            ),
+            Button(
+                "Cancel",
+                cls="btn btn-ghost btn-xs",
+                hx_get=f"/admin/keys/cancel-delete/{k.id}",
+                hx_target=f"#key-{k.id}",
+                hx_swap="outerHTML",
+            ),
+            cls="flex items-center gap-2",
+        )
+        if confirm_delete
+        else Button(
+            "Delete",
+            cls="btn btn-error btn-outline btn-xs",
+            hx_get=f"/admin/keys/confirm-delete/{k.id}",
+            hx_target=f"#key-{k.id}",
+            hx_swap="outerHTML",
+        )
+    )
+
     return Tr(
         Td(k.name, cls="font-semibold"),
         Td(
@@ -275,16 +304,7 @@ def render_key_row(k):
             )
         ),
         Td(k.created_at.strftime("%Y-%m-%d")),
-        Td(
-            Button(
-                "Delete",
-                cls="btn btn-error btn-outline btn-xs",
-                hx_delete=f"/admin/keys/delete/{k.id}",
-                hx_confirm="Are you sure?",
-                hx_target="closest tr",
-                hx_swap="outerHTML",
-            )
-        ),
+        Td(actions),
         id=f"key-{k.id}",
     )
 
@@ -296,6 +316,26 @@ async def post(name: str):
     repo = get_repository()
     new_key = await repo.create_api_key(name)
     return render_key_row(new_key)
+
+
+@rt("/admin/keys/confirm-delete/{key_id}")
+async def get(key_id: str):
+    repo = get_repository()
+    keys = await repo.get_all_api_keys()
+    current = next((k for k in keys if k.id == key_id), None)
+    if not current:
+        return ""
+    return render_key_row(current, confirm_delete=True)
+
+
+@rt("/admin/keys/cancel-delete/{key_id}")
+async def get(key_id: str):
+    repo = get_repository()
+    keys = await repo.get_all_api_keys()
+    current = next((k for k in keys if k.id == key_id), None)
+    if not current:
+        return ""
+    return render_key_row(current)
 
 
 @rt("/admin/keys/delete/{key_id}")
