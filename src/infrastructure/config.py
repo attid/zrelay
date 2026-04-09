@@ -1,8 +1,9 @@
-import json
+import logging
 import secrets
-from typing import Any, Dict, List
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -19,30 +20,22 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = ""  # Generate random if not set
 
-    # Local Auth (JSON format for MVP)
-    # [{"id": "agent1", "key": "xxx", "name": "Agent 1", "enabled": true}]
-    LOCAL_API_KEYS_JSON: str = "[]"
-
-    # MCP Endpoints (Based on z.ai documentation)
+    # MCP Endpoints
     SEARCH_MCP_URL: str = "https://api.z.ai/api/mcp/web_search_prime/sse"
     READER_MCP_URL: str = "https://api.z.ai/api/mcp/web_reader/sse"
     ZREAD_MCP_URL: str = "https://api.z.ai/api/mcp/zread/sse"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    @property
-    def local_api_keys(self) -> List[Dict[str, Any]]:
-        try:
-            return json.loads(self.LOCAL_API_KEYS_JSON)
-        except Exception:
-            return []
-
     def __init__(self, **data):
         super().__init__(**data)
         # Generate random password if not set
         if not self.ADMIN_PASSWORD:
             self.ADMIN_PASSWORD = secrets.token_urlsafe(16)
-            print(f"[zrelay] Generated random admin password: {self.ADMIN_PASSWORD}")
+            logger.warning(
+                "ADMIN_PASSWORD is not set; generated random password for this session "
+                "(set ADMIN_PASSWORD env var for stable access)"
+            )
 
 
 settings = Settings()

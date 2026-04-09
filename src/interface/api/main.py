@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.domain.entities.api_key import ApiKey
 from src.infrastructure.config import settings
 from src.interface.admin.app import app as admin_app
 from src.interface.api.auth import get_repository
@@ -16,25 +15,10 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup - initialize database
     logger.info("Starting zrelay...")
     repo = get_repository()
     await repo.init_db()
-
-    # Загрузка ключей из конфига
-    local_keys = []
-    for k in settings.local_api_keys:
-        local_keys.append(
-            ApiKey(
-                id=k.get("id"),
-                key=k.get("key"),
-                name=k.get("name", "Unknown"),
-                enabled=k.get("enabled", True),
-            )
-        )
-    if local_keys:
-        await repo.add_api_keys(local_keys)
-        logger.info(f"Loaded {len(local_keys)} local API keys from settings.")
 
     yield
     # Shutdown
