@@ -12,27 +12,27 @@ from src.interface.api.dependencies import get_zrelay_service
 router = APIRouter(prefix="/v1/vision", tags=["Vision"])
 
 
-class VisionRequest(BaseModel):
-    path: str = Field(..., description="Путь к изображению или видео")
-    prompt: Optional[str] = Field(None, description="Промпт для анализа")
+class ImageAnalysisRequest(BaseModel):
+    image_source: str = Field(..., description="Local file path or remote URL to the image")
+    prompt: str = Field(..., description="What to analyze, extract, or understand from the image")
 
 
 class UIDiffRequest(BaseModel):
-    before_path: str = Field(..., description="Путь к изображению ДО")
-    after_path: str = Field(..., description="Путь к изображению ПОСЛЕ")
-    prompt: Optional[str] = Field(None, description="Промпт для сравнения")
+    expected_image_source: str = Field(..., description="Local file path or URL to the expected (before) image")
+    actual_image_source: str = Field(..., description="Local file path or URL to the actual (after) image")
+    prompt: Optional[str] = Field(None, description="Instructions for the comparison")
 
 
 @router.post("/image-analysis", response_model=ToolResult)
 async def image_analysis(
-    request_data: VisionRequest,
+    request_data: ImageAnalysisRequest,
     request: Request,
     api_key: ApiKey = Depends(get_current_api_key),
     service=Depends(get_zrelay_service),
 ):
     return await service.call_tool(
         tool_name="vision",
-        operation="image_analysis",
+        operation="analyze_image",
         payload=request_data.model_dump(),
         client_key_id=api_key.id,
         request_id=str(uuid.uuid4()),

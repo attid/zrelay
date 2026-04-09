@@ -143,8 +143,8 @@ class TestAuth:
             ("/api/v1/zread/search-doc", {"repo": "test/repo", "query": "test"}),
             ("/api/v1/zread/repo-structure", {"repo": "test/repo"}),
             ("/api/v1/zread/read-file", {"repo": "test/repo", "path": "README.md"}),
-            ("/api/v1/vision/image-analysis", {"path": "/tmp/test.png"}),
-            ("/api/v1/vision/ui-diff-check", {"before_path": "/a.png", "after_path": "/b.png"}),
+            ("/api/v1/vision/image-analysis", {"image_source": "/tmp/test.png"}),
+            ("/api/v1/vision/ui-diff-check", {"expected_image_source": "/a.png", "actual_image_source": "/b.png"}),
         ]
         for url, payload in endpoints:
             resp = client.post(url, json=payload)
@@ -268,7 +268,7 @@ class TestVision:
         """Vision — may return ok=false if file doesn't exist, but endpoint must respond 200."""
         resp = client.post(
             "/api/v1/vision/image-analysis",
-            json={"path": "/tmp/nonexistent_test_image.png", "prompt": "What do you see?"},
+            json={"image_source": "/tmp/nonexistent_test_image.png", "prompt": "What do you see?"},
             headers=auth_headers(api_key),
         )
         assert resp.status_code == 200
@@ -280,7 +280,7 @@ class TestVision:
     def test_ui_diff_check(self, client, api_key):
         resp = client.post(
             "/api/v1/vision/ui-diff-check",
-            json={"before_path": "/tmp/before.png", "after_path": "/tmp/after.png"},
+            json={"expected_image_source": "/tmp/before.png", "actual_image_source": "/tmp/after.png"},
             headers=auth_headers(api_key),
         )
         assert resp.status_code == 200

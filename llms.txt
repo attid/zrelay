@@ -133,15 +133,15 @@ POST /api/v1/vision/image-analysis
 
 ```json
 {
-  "path": "/path/to/image.png",
+  "image_source": "/path/to/image.png",
   "prompt": "Describe what you see"
 }
 ```
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| path | string | yes | — | Path to image or video |
-| prompt | string | no | null | Analysis prompt |
+| image_source | string | yes | — | Local file path or remote URL to the image |
+| prompt | string | yes | — | What to analyze, extract, or understand from the image |
 
 #### UI Diff Check
 
@@ -151,17 +151,17 @@ POST /api/v1/vision/ui-diff-check
 
 ```json
 {
-  "before_path": "/path/to/before.png",
-  "after_path": "/path/to/after.png",
+  "expected_image_source": "/path/to/before.png",
+  "actual_image_source": "/path/to/after.png",
   "prompt": "What changed?"
 }
 ```
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| before_path | string | yes | — | Path to before image |
-| after_path | string | yes | — | Path to after image |
-| prompt | string | no | null | Comparison prompt |
+| expected_image_source | string | yes | — | Local file path or URL to the expected (before) image |
+| actual_image_source | string | yes | — | Local file path or URL to the actual (after) image |
+| prompt | string | no | null | Instructions for the comparison |
 
 ## Response Format
 
