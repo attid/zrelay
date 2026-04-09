@@ -7,6 +7,7 @@ from src.domain.entities.api_key import ApiKey
 from src.infrastructure.config import settings
 from src.interface.admin.app import app as admin_app
 from src.interface.api.auth import get_repository
+from src.interface.api.middleware.error_handler import register_exception_handlers
 from src.interface.api.routes import reader, search, vision, zread
 
 logging.basicConfig(level=settings.LOG_LEVEL)
@@ -46,6 +47,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Exception handlers for unified error format
+register_exception_handlers(app)
 
 # Роуты инструментов
 app.include_router(search.router, prefix="/api")

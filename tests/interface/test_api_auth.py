@@ -19,9 +19,10 @@ def test_health_check(client):
 
 
 def test_api_auth_missing_key(client):
-    # Попытка вызова без ключа
+    # Попытка вызова без ключа - теперь 401 вместо 422
     response = client.post("/api/v1/search/web-search", json={"query": "test"})
-    assert response.status_code == 422  # FastAPI validation error for missing Header
+    assert response.status_code == 401
+    assert "error" in response.json()
 
 
 def test_api_auth_invalid_key(client):
@@ -37,5 +38,8 @@ def test_api_auth_invalid_key(client):
         headers={"X-API-Key": "invalid"},
     )
     assert response.status_code == 401
+    assert "error" in response.json()
+
+    assert response.json()["error"]["code"] == "auth_invalid"
 
     app.dependency_overrides.clear()
