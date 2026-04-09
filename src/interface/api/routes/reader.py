@@ -12,7 +12,9 @@ router = APIRouter(prefix="/v1/reader", tags=["Reader"])
 
 
 class ReadWebRequest(BaseModel):
-    url: str = Field(..., description="URL веб-страницы для чтения")
+    url: str = Field(..., description="URL of the website to fetch and read")
+    timeout: int = Field(20, description="Request timeout in seconds")
+    return_format: str = Field("markdown", description="Response format: markdown or text")
 
 
 @router.post("/read-web", response_model=ToolResult)

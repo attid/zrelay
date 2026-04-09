@@ -32,16 +32,18 @@ POST /api/v1/search/web-search
 ```json
 {
   "query": "REST API best practices",
-  "language": "en",
-  "max_results": 10
+  "recency": "noLimit",
+  "content_size": "medium",
+  "location": "us"
 }
 ```
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| query | string | yes | — | Search query |
-| language | string | no | "ru" | Search language |
-| max_results | int | no | 10 | Max number of results |
+| query | string | yes | — | Search query (max 70 chars recommended) |
+| recency | string | no | "noLimit" | Time filter: oneDay, oneWeek, oneMonth, oneYear, noLimit |
+| content_size | string | no | "medium" | Summary size: medium (400-600 words) or high (2500 words) |
+| location | string | no | "us" | Region: cn (China) or us (other) |
 
 ### Reader — Read Web Page
 
@@ -51,13 +53,17 @@ POST /api/v1/reader/read-web
 
 ```json
 {
-  "url": "https://example.com/article"
+  "url": "https://example.com/article",
+  "timeout": 20,
+  "return_format": "markdown"
 }
 ```
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | url | string | yes | — | URL of the web page to read |
+| timeout | int | no | 20 | Request timeout in seconds |
+| return_format | string | no | "markdown" | Response format: markdown or text |
 
 ### Zread — Repository Reader
 
@@ -69,15 +75,17 @@ POST /api/v1/zread/search-doc
 
 ```json
 {
-  "repo": "modelcontextprotocol/servers",
-  "query": "configuration options"
+  "repo": "fastapi/fastapi",
+  "query": "routing",
+  "language": "en"
 }
 ```
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | repo | string | yes | — | Repository in owner/repo format |
-| query | string | yes | — | Search query |
+| query | string | yes | — | Search keywords or question |
+| language | string | no | "en" | Language: zh or en |
 
 #### Get Repository Structure
 
@@ -87,13 +95,15 @@ POST /api/v1/zread/repo-structure
 
 ```json
 {
-  "repo": "modelcontextprotocol/servers"
+  "repo": "fastapi/fastapi",
+  "dir_path": "/"
 }
 ```
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | repo | string | yes | — | Repository in owner/repo format |
+| dir_path | string | no | "/" | Directory path to inspect |
 
 #### Read File from Repository
 
@@ -103,7 +113,7 @@ POST /api/v1/zread/read-file
 
 ```json
 {
-  "repo": "modelcontextprotocol/servers",
+  "repo": "fastapi/fastapi",
   "path": "README.md"
 }
 ```
@@ -111,7 +121,7 @@ POST /api/v1/zread/read-file
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | repo | string | yes | — | Repository in owner/repo format |
-| path | string | yes | — | Path to file in the repo |
+| path | string | yes | — | Relative file path |
 
 ### Vision — Image & Video Analysis
 
@@ -160,7 +170,7 @@ Success:
 {
   "ok": true,
   "tool": "search",
-  "operation": "webSearchPrime",
+  "operation": "web_search_prime",
   "request_id": "uuid",
   "data": { ... },
   "meta": {}
@@ -172,7 +182,7 @@ Error:
 {
   "ok": false,
   "tool": "search",
-  "operation": "webSearchPrime",
+  "operation": "web_search_prime",
   "request_id": "uuid",
   "error": {"code": "tool_error", "message": "..."},
   "error_detail": {"error": {"code": "tool_error", "message": "...", "details": null}},

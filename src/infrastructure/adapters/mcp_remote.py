@@ -17,6 +17,21 @@ class MCPRemoteAdapter(MCPPort):
         self.url = url
         self.api_key = api_key
 
+    @staticmethod
+    def _create_sse_client(
+        headers: dict[str, str] | None = None,
+        timeout: httpx.Timeout | None = None,
+        auth: httpx.Auth | None = None,
+    ) -> httpx.AsyncClient:
+        """Create httpx client tuned for SSE — HTTP/2 required for z.ai."""
+        return httpx.AsyncClient(
+            headers=headers,
+            timeout=timeout,
+            auth=auth,
+            follow_redirects=True,
+            http2=True,
+        )
+
     async def invoke(
         self,
         operation: str,
@@ -28,11 +43,15 @@ class MCPRemoteAdapter(MCPPort):
         logger.info(f"Invoking remote tool {operation} at {self.url}")
 
         try:
-            # SSE connections need long timeouts — default httpx timeout is too short
+            # SSE connections need long timeouts
+            # timeout — general httpx timeout, sse_read_timeout — SSE stream read timeout
+            # Custom factory disables httpx response buffering for SSE compatibility
             async with sse_client(
                 url=self.url,
                 headers=headers,
-                timeout=httpx.Timeout(connect=10.0, read=120.0, write=10.0, pool=10.0),
+                timeout=60,
+                sse_read_timeout=300,
+                httpx_client_factory=self._create_sse_client,
             ) as (read, write):
                 async with ClientSession(read, write) as session:
                     await asyncio.wait_for(session.initialize(), timeout=10)
