@@ -23,7 +23,7 @@ RUN mkdir -p /app/data
 # Настройка переменных окружения
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app"
-ENV DATABASE_URL="sqlite+aiosqlite:////app/stats.db"
+ENV DATABASE_URL="sqlite+aiosqlite:////app/data/stats.db"
 
 # Открываем порт
 EXPOSE 8000

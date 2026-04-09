@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     LOG_LEVEL: str = "INFO"
     ENABLE_USAGE_STATS: bool = True
-    DATABASE_URL: str = "sqlite+aiosqlite:///stats.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///data/stats.db"
     
     # Local Auth (JSON format for MVP)
     # [{"id": "agent1", "key": "xxx", "name": "Agent 1", "enabled": true}]

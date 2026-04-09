@@ -1,6 +1,6 @@
 services:
   zrelay:
-    build: .
+    image: ghcr.io/attid/zrelay:latest
     ports:
       - "${PORT:-8000}:8000"
     env_file:
