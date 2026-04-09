@@ -16,5 +16,17 @@ class RepositoryPort(ABC):
         pass
 
     @abstractmethod
-    async def init_db(self) -> None:
+    async def get_all_api_keys(self) -> List[ApiKey]:
+        pass
+
+    @abstractmethod
+    async def update_api_key_status(self, key_id: str, enabled: bool) -> None:
+        pass
+
+    @abstractmethod
+    async def get_recent_logs(self, limit: int = 50) -> List[UsageLog]:
+        pass
+
+    @abstractmethod
+    async def get_stats_summary(self) -> Dict[str, Any]:
         pass

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from contextlib import asynccontextmanager
 from src.interface.api.routes import search, reader, zread, vision
+from src.interface.admin.app import app as admin_app
 from src.interface.api.auth import get_repository
 from src.infrastructure.config import settings
 from src.domain.entities.api_key import ApiKey
@@ -54,3 +55,4 @@ async def health():
 async def ready():
     # Можно добавить проверку доступности БД
     return {"status": "ready"}
+ "ready"}
