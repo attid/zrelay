@@ -1,9 +1,6 @@
-import logging
 import secrets
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -32,10 +29,7 @@ class Settings(BaseSettings):
         # Generate random password if not set
         if not self.ADMIN_PASSWORD:
             self.ADMIN_PASSWORD = secrets.token_urlsafe(16)
-            logger.warning(
-                "ADMIN_PASSWORD is not set; generated random password for this session "
-                "(set ADMIN_PASSWORD env var for stable access)"
-            )
+            print(f"[zrelay] Generated random admin password: {self.ADMIN_PASSWORD}")
 
 
 settings = Settings()
