@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     ENABLE_USAGE_STATS: bool = True
     DATABASE_URL: str = "sqlite+aiosqlite:///data/stats.db"
     
+    # Admin
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = "admin" # Change this in production!
+    
     # Local Auth (JSON format for MVP)
     # [{"id": "agent1", "key": "xxx", "name": "Agent 1", "enabled": true}]
     LOCAL_API_KEYS_JSON: str = "[]"

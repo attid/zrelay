@@ -2,6 +2,7 @@ from fasthtml.common import *
 from src.interface.api.auth import get_repository
 from src.infrastructure.config import settings
 import asyncio
+import base64
 
 # Настройка стилей
 hdrs = (
@@ -9,7 +10,22 @@ hdrs = (
     Script(src="https://cdn.tailwindcss.com"),
 )
 
-app, rt = fast_app(hdrs=hdrs, cls="p-4")
+def auth_before(req):
+    auth = req.headers.get('Authorization')
+    if not auth: return Response(status=401, headers={'WWW-Authenticate': 'Basic realm="zrelay admin"'})
+    
+    try:
+        scheme, data = auth.split()
+        if scheme.lower() != 'basic': return Response(status=401)
+        decoded = base64.b64decode(data).decode('utf-8')
+        username, password = decoded.split(':')
+        if username == settings.ADMIN_USERNAME and password == settings.ADMIN_PASSWORD:
+            return
+    except Exception:
+        pass
+    return Response(status=401, headers={'WWW-Authenticate': 'Basic realm="zrelay admin"'})
+
+app, rt = fast_app(hdrs=hdrs, cls="p-4", before=auth_before)
 
 def Layout(*args):
     return Main(
